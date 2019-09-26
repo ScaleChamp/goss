@@ -10,7 +10,7 @@ func (api *API) waitUntilReady(id string) (map[string]interface{}, error) {
 	data := make(map[string]interface{})
 	failed := make(map[string]interface{})
 	for {
-		response, err := api.sling.Path("/v1/instances").Get(id).Receive(&data, &failed)
+		response, err := api.sling.Path("/v1/instances/").Get(id).Receive(&data, &failed)
 		if err != nil {
 			return nil, err
 		}
@@ -28,7 +28,7 @@ func (api *API) waitUntilReady(id string) (map[string]interface{}, error) {
 func (api *API) CreateInstance(params map[string]interface{}) (map[string]interface{}, error) {
 	data := make(map[string]interface{})
 	failed := make(map[string]interface{})
-	response, err := api.sling.Post("/v1/instances").BodyJSON(params).Receive(&data, &failed)
+	response, err := api.sling.Post("/v1/instances/").BodyJSON(params).Receive(&data, &failed)
 
 	if err != nil {
 		return nil, err
@@ -43,7 +43,7 @@ func (api *API) CreateInstance(params map[string]interface{}) (map[string]interf
 func (api *API) ReadInstance(id string) (map[string]interface{}, error) {
 	data := make(map[string]interface{})
 	failed := make(map[string]interface{})
-	response, err := api.sling.Path("/v1/instances").Get(id).Receive(&data, &failed)
+	response, err := api.sling.Path("/v1/instances/").Get(id).Receive(&data, &failed)
 
 	if err != nil {
 		return nil, err
@@ -58,7 +58,7 @@ func (api *API) ReadInstance(id string) (map[string]interface{}, error) {
 func (api *API) ReadInstances() ([]map[string]interface{}, error) {
 	var data []map[string]interface{}
 	failed := make(map[string]interface{})
-	response, err := api.sling.Get("/v1/instances").Receive(&data, &failed)
+	response, err := api.sling.Get("/v1/instances/").Receive(&data, &failed)
 
 	if err != nil {
 		return nil, err
