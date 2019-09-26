@@ -3,7 +3,6 @@ package goss
 import (
 	"errors"
 	"fmt"
-	"strconv"
 	"time"
 )
 
@@ -19,7 +18,6 @@ func (api *API) waitUntilReady(id string) (map[string]interface{}, error) {
 			return nil, errors.New(fmt.Sprintf("waitUntilReady failed, status: %v, message: %s", response.StatusCode, failed))
 		}
 		if data["status"] == 2 {
-			data["id"] = id
 			return data, nil
 		}
 
@@ -39,14 +37,13 @@ func (api *API) CreateInstance(params map[string]interface{}) (map[string]interf
 		return nil, errors.New(fmt.Sprintf("CreateInstance failed, status: %v, message: %s", response.StatusCode, failed))
 	}
 
-	data["id"] = strconv.FormatFloat(data["id"].(float64), 'f', 0, 64)
 	return api.waitUntilReady(data["id"].(string))
 }
 
 func (api *API) ReadInstance(id string) (map[string]interface{}, error) {
 	data := make(map[string]interface{})
 	failed := make(map[string]interface{})
-	response, err := api.sling.Path("/v1/instances/").Get(id).Receive(&data, &failed)
+	response, err := api.sling.Path("/v1/instances").Get(id).Receive(&data, &failed)
 
 	if err != nil {
 		return nil, err
