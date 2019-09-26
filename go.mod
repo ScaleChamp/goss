@@ -1,4 +1,4 @@
-module github.com/scalablespace/go-sdk
+module github.com/scalablespace/goss
 
 go 1.13
 
