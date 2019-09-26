@@ -10,14 +10,14 @@ func (api *API) waitUntilReady(id string) (map[string]interface{}, error) {
 	data := make(map[string]interface{})
 	failed := make(map[string]interface{})
 	for {
-		response, err := api.sling.Path("/v1/instances/").Get(id).Receive(&data, &failed)
+		response, err := api.sling.Path("/v1/instances").Get(id).Receive(&data, &failed)
 		if err != nil {
 			return nil, err
 		}
 		if response.StatusCode != 200 {
 			return nil, errors.New(fmt.Sprintf("waitUntilReady failed, status: %v, message: %s", response.StatusCode, failed))
 		}
-		if data["status"] == 2 {
+		if data["state"] == "running" {
 			return data, nil
 		}
 
