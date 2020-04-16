@@ -1,4 +1,4 @@
-module github.com/scalablespace/goss
+module github.com/scalechamp/goss
 
 go 1.13
 
