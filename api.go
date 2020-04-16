@@ -1,19 +1,26 @@
 package goss
 
 import (
+	"context"
 	"github.com/dghubble/sling"
-	"net/http"
+	"golang.org/x/oauth2"
 )
 
-type API struct {
-	sling *sling.Sling
+type Client struct {
+	Instances *Instances
+	Plans     *Plans
 }
 
-func New(baseUrl, apiKey string) *API {
-	return &API{
-		sling: sling.New().
-			Client(http.DefaultClient).
-			Base(baseUrl).
-			SetBasicAuth("", apiKey),
+func NewClientFromToken(apiKey string) *Client {
+	return NewClient("", apiKey)
+}
+
+func NewClient(baseUrl, apiKey string) *Client {
+	c := sling.New().
+		Client(oauth2.NewClient(context.Background(), oauth2.StaticTokenSource(&oauth2.Token{AccessToken: apiKey}))).
+		Base(baseUrl)
+	return &Client{
+		Instances: &Instances{sling: c},
+		Plans:     &Plans{sling: c},
 	}
 }
