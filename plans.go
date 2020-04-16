@@ -10,12 +10,12 @@ type Plans struct {
 }
 
 type Plan struct {
-	ID     string `json:"id"`
-	Kind   string `json:"kind"`
-	Name   string `json:"name"`
-	Price  string `json:"price"`
-	Cloud  string `json:"cloud"`
-	Region string `json:"region"`
+	ID     string `json:"id" url:"-"`
+	Kind   string `json:"kind"  url:"kind"`
+	Name   string `json:"name"  url:"-"`
+	Price  string `json:"price"  url:"-"`
+	Cloud  string `json:"cloud"  url:"cloud"`
+	Region string `json:"region"  url:"region"`
 }
 
 func (api *Plans) Find(plan *Plan) (*Plan, error) {
