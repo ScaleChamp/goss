@@ -6,60 +6,73 @@ import (
 	"time"
 )
 
-//func (api *API) waitUntilReady(id string) (map[string]interface{}, error) {
-//	data := make(map[string]interface{})
-//	failed := make(map[string]interface{})
-//	for {
-//		response, err := api.sling.Path("/v1/instances/").Get(id).Receive(&data, &failed)
-//		if err != nil {
-//			return nil, err
-//		}
-//		if response.StatusCode != 200 {
-//			return nil, errors.New(fmt.Sprintf("waitUntilReady failed, status: %v, message: %s", response.StatusCode, failed))
-//		}
-//		if data["state"] == "running" {
-//			return data, nil
-//		}
-//
-//		time.Sleep(10 * time.Second)
-//	}
-//}
-
 type Instances struct {
 	sling *sling.Sling
 }
 
 type Instance struct {
-	ID        string    `json:"id"`
-	Name      string    `json:"name"`
-	Kind      string    `json:"kind"`
-	Password  string    `json:"password,omitempty"`
-	CreatedAt time.Time `json:"created_at,omitempty"`
-	State     string    `json:"state,omitempty"`
-	Enabled   bool      `json:"enabled,omitempty"`
-	Whitelist []string  `json:"whitelist,omitempty"`
-	PlanID    string    `json:"plan_id,omitempty"`
-
-	ConnectionInfo *struct {
-		MasterHost  string `json:"master_host"`
-		ReplicaHost string `json:"replica_host"`
-	} `json:"connection_info,omitempty"` // read-only
+	ID             string         `json:"id"`
+	Name           string         `json:"name"`
+	Kind           string         `json:"kind"`
+	Password       string         `json:"password"`
+	CreatedAt      time.Time      `json:"created_at"`
+	State          string         `json:"state"`
+	Enabled        bool           `json:"enabled"`
+	Whitelist      []string       `json:"whitelist"`
+	PlanID         string         `json:"plan_id"`
+	LicenseKey     string         `json:"license_key"`
+	ConnectionInfo ConnectionInfo `json:"connection_info"`
 }
 
-func (api *Instances) Create(params *Instance) (*Instance, error) {
-	response, err := api.sling.Post("/v1/instances/").BodyJSON(params).ReceiveSuccess(params)
+type ConnectionInfo struct {
+	MasterHost  string `json:"master_host"`
+	ReplicaHost string `json:"replica_host"`
+}
+
+type InstanceCreateRequest struct {
+	Name      string   `json:"name"`
+	PlanID    string   `json:"plan_id,omitempty"`
+	Password  string   `json:"password"`
+	Whitelist []string `json:"whitelist,omitempty"`
+}
+
+type InstanceUpdateRequest struct {
+	ID         string    `json:"-"`
+	Name       *string   `json:"name,omitempty"`
+	Password   string    `json:"password,omitempty"`
+	PlanID     string    `json:"plan_id,omitempty"`
+	Whitelist  *[]string `json:"whitelist,omitempty"`
+	LicenseKey string    `json:"license_key,omitempty"`
+	Enabled    *bool     `json:"enabled,omitempty"`
+}
+
+func (s *Instances) Create(instanceCreqteRequest *InstanceCreateRequest) (*Instance, error) {
+	instance := new(Instance)
+	response, err := s.sling.Post("/v1/s/").BodyJSON(instanceCreqteRequest).ReceiveSuccess(instance)
 	if err != nil {
 		return nil, err
 	}
 	if response.StatusCode != 200 {
 		return nil, fmt.Errorf("err: status: %v", response.StatusCode)
 	}
-	return params, nil
+	return instance, nil
 }
 
-func (api *Instances) Get(id string) (*Instance, error) {
+func (s *Instances) Update(instanceUpdateRequest *InstanceUpdateRequest) (*Instance, error) {
+	instance := new(Instance)
+	response, err := s.sling.Patch("/v1/s/").Put(instanceUpdateRequest.ID).BodyJSON(instanceUpdateRequest).ReceiveSuccess(instance)
+	if err != nil {
+		return nil, err
+	}
+	if response.StatusCode != 200 {
+		return nil, fmt.Errorf("err: status: %v", response.StatusCode)
+	}
+	return instance, nil
+}
+
+func (s *Instances) Get(id string) (*Instance, error) {
 	data := new(Instance)
-	response, err := api.sling.Path("/v1/instances/").Get(id).ReceiveSuccess(data)
+	response, err := s.sling.Path("/v1/s/").Get(id).ReceiveSuccess(data)
 
 	if err != nil {
 		return nil, err
@@ -71,9 +84,9 @@ func (api *Instances) Get(id string) (*Instance, error) {
 	return data, nil
 }
 
-func (api *Instances) List() ([]*Instance, error) {
-	data := make([]*Instance, 0)
-	response, err := api.sling.Get("/v1/instances/").ReceiveSuccess(&data)
+func (s *Instances) List() ([]*Instance, error) {
+	instance := make([]*Instance, 0)
+	response, err := s.sling.Get("/v1/s/").ReceiveSuccess(&instance)
 
 	if err != nil {
 		return nil, err
@@ -82,11 +95,11 @@ func (api *Instances) List() ([]*Instance, error) {
 		return nil, fmt.Errorf("err: status: %v", response.StatusCode)
 	}
 
-	return data, nil
+	return instance, nil
 }
 
-func (api *Instances) Delete(id string) error {
-	response, err := api.sling.Path("/v1/instances/").Delete(id).ReceiveSuccess(nil)
+func (s *Instances) Delete(id string) error {
+	response, err := s.sling.Path("/v1/s/").Delete(id).Receive(nil, nil)
 	if err != nil {
 		return err
 	}

@@ -10,16 +10,24 @@ type Plans struct {
 }
 
 type Plan struct {
-	ID     string `json:"id" url:"-"`
-	Kind   string `json:"kind"  url:"kind"`
-	Name   string `json:"name"  url:"-"`
-	Price  string `json:"price"  url:"-"`
-	Cloud  string `json:"cloud"  url:"cloud"`
-	Region string `json:"region"  url:"region"`
+	ID     string  `json:"id"`
+	Kind   string  `json:"kind"`
+	Name   string  `json:"name"`
+	Price  float64 `json:"price"`
+	Cloud  string  `json:"cloud"`
+	Region string  `json:"region"`
 }
 
-func (api *Plans) Find(plan *Plan) (*Plan, error) {
-	response, err := api.sling.Path("/v1/plans/").Get("new").QueryStruct(plan).ReceiveSuccess(plan)
+type PlanFindRequest struct {
+	Kind   string `url:"kind"`
+	Name   string `url:"name"`
+	Cloud  string `url:"cloud"`
+	Region string `url:"region"`
+}
+
+func (s *Plans) Find(planFindRequest *PlanFindRequest) (*Plan, error) {
+	plan := new(Plan)
+	response, err := s.sling.Get("/v1/plans/new").QueryStruct(planFindRequest).ReceiveSuccess(plan)
 
 	if err != nil {
 		return nil, err
@@ -31,9 +39,9 @@ func (api *Plans) Find(plan *Plan) (*Plan, error) {
 	return plan, nil
 }
 
-func (api *Plans) Get(id string) (*Plan, error) {
-	data := new(Plan)
-	response, err := api.sling.Path("/v1/plans/").Get(id).ReceiveSuccess(data)
+func (s *Plans) Get(id string) (*Plan, error) {
+	plan := new(Plan)
+	response, err := s.sling.Path("/v1/plans/").Get(id).ReceiveSuccess(plan)
 
 	if err != nil {
 		return nil, err
@@ -42,12 +50,12 @@ func (api *Plans) Get(id string) (*Plan, error) {
 		return nil, fmt.Errorf("err: status: %v", response.StatusCode)
 	}
 
-	return data, nil
+	return plan, nil
 }
 
-func (api *Plans) List() ([]*Plan, error) {
-	data := make([]*Plan, 0)
-	response, err := api.sling.Get("/v1/plans/").ReceiveSuccess(&data)
+func (s *Plans) List() ([]*Plan, error) {
+	plan := make([]*Plan, 0)
+	response, err := s.sling.Get("/v1/plans/").ReceiveSuccess(&plan)
 
 	if err != nil {
 		return nil, err
@@ -56,5 +64,5 @@ func (api *Plans) List() ([]*Plan, error) {
 		return nil, fmt.Errorf("err: status: %v", response.StatusCode)
 	}
 
-	return data, nil
+	return plan, nil
 }
