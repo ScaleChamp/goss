@@ -31,28 +31,30 @@ type ConnectionInfo struct {
 }
 
 type InstanceCreateRequest struct {
-	Name           string   `json:"name"`
-	PlanID         string   `json:"plan_id,omitempty"`
-	LicenseKey     string   `json:"license_key,omitempty"`
-	EvictionPolicy string   `json:"eviction_policy,omitempty"`
+	Name           string   `json:"name,omitempty"`
 	Password       string   `json:"password,omitempty"`
+	PlanID         string   `json:"plan_id,omitempty"`
 	Whitelist      []string `json:"whitelist,omitempty"`
+	LicenseKey     string   `json:"license_key,omitempty"`     // only for keydb-pro
+	EvictionPolicy string   `json:"eviction_policy,omitempty"` // only for keydb-pro, redis, keydb
 }
 
 type InstanceUpdateRequest struct {
-	ID             string    `json:"-"`
-	Name           *string   `json:"name,omitempty"`
-	Password       string    `json:"password,omitempty"`
-	PlanID         string    `json:"plan_id,omitempty"`
-	Whitelist      *[]string `json:"whitelist,omitempty"`
-	LicenseKey     string    `json:"license_key,omitempty"`
-	EvictionPolicy string    `json:"eviction_policy,omitempty"`
-	Enabled        *bool     `json:"enabled,omitempty"`
+	ID             string   `json:"-"`
+	Name           string   `json:"name,omitempty"`
+	Password       string   `json:"password,omitempty"`
+	PlanID         string   `json:"plan_id,omitempty"`
+	Whitelist      []string `json:"whitelist,omitempty"`
+	Enabled        *bool    `json:"enabled,omitempty"`
+	LicenseKey     string   `json:"license_key,omitempty"`     // only for keydb-pro
+	EvictionPolicy string   `json:"eviction_policy,omitempty"` // only for keydb-pro, redis, keydb
 }
 
 func (s *Instances) Create(instanceCreqteRequest *InstanceCreateRequest) (*Instance, error) {
 	instance := new(Instance)
-	response, err := s.sling.Post("/v1/instances/").BodyJSON(instanceCreqteRequest).ReceiveSuccess(instance)
+	response, err := s.sling.Post(instances).
+		BodyJSON(instanceCreqteRequest).
+		ReceiveSuccess(instance)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +66,7 @@ func (s *Instances) Create(instanceCreqteRequest *InstanceCreateRequest) (*Insta
 
 func (s *Instances) Update(instanceUpdateRequest *InstanceUpdateRequest) (*Instance, error) {
 	instance := new(Instance)
-	response, err := s.sling.Patch("/v1/instances/").Put(instanceUpdateRequest.ID).BodyJSON(instanceUpdateRequest).ReceiveSuccess(instance)
+	response, err := s.sling.Path(instances).Patch(instanceUpdateRequest.ID).BodyJSON(instanceUpdateRequest).ReceiveSuccess(instance)
 	if err != nil {
 		return nil, err
 	}
@@ -74,9 +76,11 @@ func (s *Instances) Update(instanceUpdateRequest *InstanceUpdateRequest) (*Insta
 	return instance, nil
 }
 
+const instances = "/v1/instances/"
+
 func (s *Instances) Get(id string) (*Instance, error) {
 	data := new(Instance)
-	response, err := s.sling.Path("/v1/instances/").Get(id).ReceiveSuccess(data)
+	response, err := s.sling.Path(instances).Get(id).ReceiveSuccess(data)
 
 	if err != nil {
 		return nil, err
@@ -91,7 +95,6 @@ func (s *Instances) Get(id string) (*Instance, error) {
 func (s *Instances) List() ([]*Instance, error) {
 	instance := make([]*Instance, 0)
 	response, err := s.sling.Get("/v1/instances/").ReceiveSuccess(&instance)
-
 	if err != nil {
 		return nil, err
 	}
