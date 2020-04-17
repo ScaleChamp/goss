@@ -15,13 +15,14 @@ type Instance struct {
 	Name           string         `json:"name"`
 	Kind           string         `json:"kind"`
 	Password       string         `json:"password"`
-	CreatedAt      time.Time      `json:"created_at"`
 	State          string         `json:"state"`
 	Enabled        bool           `json:"enabled"`
 	Whitelist      []string       `json:"whitelist"`
 	PlanID         string         `json:"plan_id"`
-	LicenseKey     string         `json:"license_key"`
+	LicenseKey     *string        `json:"license_key,omitempty"`
+	EvictionPolicy *string        `json:"eviction_policy,omitempty"`
 	ConnectionInfo ConnectionInfo `json:"connection_info"`
+	CreatedAt      time.Time      `json:"created_at"`
 }
 
 type ConnectionInfo struct {
@@ -32,7 +33,9 @@ type ConnectionInfo struct {
 type InstanceCreateRequest struct {
 	Name      string   `json:"name"`
 	PlanID    string   `json:"plan_id,omitempty"`
-	Password  string   `json:"password"`
+	LicenseKey string `json:"license_key,omitempty"`
+	EvictionPolicy string `json:"eviction_policy,omitempty"`
+	Password  string   `json:"password,omitempty"`
 	Whitelist []string `json:"whitelist,omitempty"`
 }
 
@@ -43,12 +46,13 @@ type InstanceUpdateRequest struct {
 	PlanID     string    `json:"plan_id,omitempty"`
 	Whitelist  *[]string `json:"whitelist,omitempty"`
 	LicenseKey string    `json:"license_key,omitempty"`
+	EvictionPolicy string `json:"eviction_policy,omitempty"`
 	Enabled    *bool     `json:"enabled,omitempty"`
 }
 
 func (s *Instances) Create(instanceCreqteRequest *InstanceCreateRequest) (*Instance, error) {
 	instance := new(Instance)
-	response, err := s.sling.Post("/v1/s/").BodyJSON(instanceCreqteRequest).ReceiveSuccess(instance)
+	response, err := s.sling.Post("/v1/instances/").BodyJSON(instanceCreqteRequest).ReceiveSuccess(instance)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +64,7 @@ func (s *Instances) Create(instanceCreqteRequest *InstanceCreateRequest) (*Insta
 
 func (s *Instances) Update(instanceUpdateRequest *InstanceUpdateRequest) (*Instance, error) {
 	instance := new(Instance)
-	response, err := s.sling.Patch("/v1/s/").Put(instanceUpdateRequest.ID).BodyJSON(instanceUpdateRequest).ReceiveSuccess(instance)
+	response, err := s.sling.Patch("/v1/instances/").Put(instanceUpdateRequest.ID).BodyJSON(instanceUpdateRequest).ReceiveSuccess(instance)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +76,7 @@ func (s *Instances) Update(instanceUpdateRequest *InstanceUpdateRequest) (*Insta
 
 func (s *Instances) Get(id string) (*Instance, error) {
 	data := new(Instance)
-	response, err := s.sling.Path("/v1/s/").Get(id).ReceiveSuccess(data)
+	response, err := s.sling.Path("/v1/instances/").Get(id).ReceiveSuccess(data)
 
 	if err != nil {
 		return nil, err
@@ -86,7 +90,7 @@ func (s *Instances) Get(id string) (*Instance, error) {
 
 func (s *Instances) List() ([]*Instance, error) {
 	instance := make([]*Instance, 0)
-	response, err := s.sling.Get("/v1/s/").ReceiveSuccess(&instance)
+	response, err := s.sling.Get("/v1/instances/").ReceiveSuccess(&instance)
 
 	if err != nil {
 		return nil, err
@@ -99,7 +103,7 @@ func (s *Instances) List() ([]*Instance, error) {
 }
 
 func (s *Instances) Delete(id string) error {
-	response, err := s.sling.Path("/v1/s/").Delete(id).Receive(nil, nil)
+	response, err := s.sling.Path("/v1/instances/").Delete(id).Receive(nil, nil)
 	if err != nil {
 		return err
 	}
