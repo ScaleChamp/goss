@@ -1,13 +1,22 @@
 package goss
 
 import (
+	"context"
 	"fmt"
-	"github.com/dghubble/sling"
+	"net/http"
 	"time"
 )
 
 type Instances struct {
-	sling *sling.Sling
+	client *Client
+}
+
+type InstancesServiceOp interface {
+	Create(ctx context.Context, instanceCreateRequest *InstanceCreateRequest) (*Instance, error)
+	Update(ctx context.Context, instanceUpdateRequest *InstanceUpdateRequest) (*Instance, error)
+	Get(ctx context.Context, id string) (*Instance, error)
+	List(ctx context.Context) ([]*Instance, error)
+	Delete(ctx context.Context, id string) error
 }
 
 type Instance struct {
@@ -50,68 +59,62 @@ type InstanceUpdateRequest struct {
 	EvictionPolicy string   `json:"eviction_policy,omitempty"` // only for keydb-pro, redis, keydb
 }
 
-func (s *Instances) Create(instanceCreqteRequest *InstanceCreateRequest) (*Instance, error) {
+func (s *Instances) Create(ctx context.Context, instanceCreateRequest *InstanceCreateRequest) (*Instance, error) {
+	request, err := s.client.NewRequest(http.MethodPost, instances, instanceCreateRequest)
+	if err != nil {
+		return nil, err
+	}
 	instance := new(Instance)
-	response, err := s.sling.Post(instances).
-		BodyJSON(instanceCreqteRequest).
-		ReceiveSuccess(instance)
-	if err != nil {
+	if err := s.client.Do(ctx, request, instance); err != nil {
 		return nil, err
-	}
-	if response.StatusCode != 200 {
-		return nil, fmt.Errorf("err: status: %v", response.StatusCode)
 	}
 	return instance, nil
 }
 
-func (s *Instances) Update(instanceUpdateRequest *InstanceUpdateRequest) (*Instance, error) {
+func (s *Instances) Update(ctx context.Context, instanceUpdateRequest *InstanceUpdateRequest) (*Instance, error) {
+	request, err := s.client.NewRequest(http.MethodPatch, instances, instanceUpdateRequest)
+	if err != nil {
+		return nil, err
+	}
 	instance := new(Instance)
-	response, err := s.sling.Path(instances).Patch(instanceUpdateRequest.ID).BodyJSON(instanceUpdateRequest).ReceiveSuccess(instance)
-	if err != nil {
+	if err := s.client.Do(ctx, request, instance); err != nil {
 		return nil, err
-	}
-	if response.StatusCode != 200 {
-		return nil, fmt.Errorf("err: status: %v", response.StatusCode)
 	}
 	return instance, nil
 }
 
-const instances = "/v1/instances/"
+const instances = "/v1/instances"
 
-func (s *Instances) Get(id string) (*Instance, error) {
-	data := new(Instance)
-	response, err := s.sling.Path(instances).Get(id).ReceiveSuccess(data)
-
+func (s *Instances) Get(ctx context.Context, id string) (*Instance, error) {
+	path := fmt.Sprintf("%s/%s", instances, id)
+	request, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err
 	}
-	if response.StatusCode != 200 {
-		return nil, fmt.Errorf("err: status: %v", response.StatusCode)
-	}
-
-	return data, nil
-}
-
-func (s *Instances) List() ([]*Instance, error) {
-	instance := make([]*Instance, 0)
-	response, err := s.sling.Get("/v1/instances/").ReceiveSuccess(&instance)
-	if err != nil {
+	instance := new(Instance)
+	if err := s.client.Do(ctx, request, instance); err != nil {
 		return nil, err
 	}
-	if response.StatusCode != 200 {
-		return nil, fmt.Errorf("err: status: %v", response.StatusCode)
-	}
-
 	return instance, nil
 }
 
-func (s *Instances) Delete(id string) error {
-	response, err := s.sling.Path("/v1/instances/").Delete(id).Receive(nil, nil)
+func (s *Instances) List(ctx context.Context) ([]*Instance, error) {
+	request, err := s.client.NewRequest(http.MethodGet, instances, nil)
+	if err != nil {
+		return nil, err
+	}
+	instances := make([]*Instance, 0)
+	if err := s.client.Do(ctx, request, instances); err != nil {
+		return nil, err
+	}
+	return instances, nil
+}
+
+func (s *Instances) Delete(ctx context.Context, id string) error {
+	path := fmt.Sprintf("%s/%s", instances, id)
+	request, err := s.client.NewRequest(http.MethodDelete, path, nil)
 	if err != nil {
 		return err
 	}
-	if response.StatusCode != 200 {
-		return fmt.Errorf("err: status: %v", response.StatusCode)
-	}
-	return nil
+	return s.client.Do(ctx, request, instances)
 }

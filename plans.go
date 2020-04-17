@@ -1,12 +1,21 @@
 package goss
 
 import (
+	"context"
 	"fmt"
-	"github.com/dghubble/sling"
+	"github.com/google/go-querystring/query"
+	"net/http"
+	"net/url"
 )
 
 type Plans struct {
-	sling *sling.Sling
+	client *Client
+}
+
+type PlansServiceOp interface {
+	Find(ctx context.Context, planFindRequest *PlanFindRequest) (*Plan, error)
+	List(ctx context.Context) ([]*Plan, error)
+	Get(ctx context.Context, id string) (*Plan, error)
 }
 
 type Plan struct {
@@ -25,44 +34,50 @@ type PlanFindRequest struct {
 	Region string `url:"region"`
 }
 
-func (s *Plans) Find(planFindRequest *PlanFindRequest) (*Plan, error) {
-	plan := new(Plan)
-	response, err := s.sling.Get("/v1/plans/new").QueryStruct(planFindRequest).ReceiveSuccess(plan)
-
+func (s *Plans) Find(ctx context.Context, planFindRequest *PlanFindRequest) (*Plan, error) {
+	values, err := query.Values(planFindRequest)
 	if err != nil {
 		return nil, err
 	}
-	if response.StatusCode != 200 {
-		return nil, fmt.Errorf("err: status: %v", response.StatusCode)
+	u := url.URL{
+		Path:       fmt.Sprintf("%s/new", plansUrl),
+		RawQuery:   values.Encode(),
 	}
-
+	request, err := s.client.NewRequest(http.MethodGet, u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	plan := new(Plan)
+	if err := s.client.Do(ctx, request, plan); err != nil {
+		return nil, err
+	}
 	return plan, nil
 }
 
-func (s *Plans) Get(id string) (*Plan, error) {
-	plan := new(Plan)
-	response, err := s.sling.Path("/v1/plans/").Get(id).ReceiveSuccess(plan)
+const plansUrl = "/v1/plans"
 
+func (s *Plans) Get(ctx context.Context, id string) (*Plan, error) {
+	path := fmt.Sprintf("%s/%s", plansUrl, id)
+	request, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err
 	}
-	if response.StatusCode != 200 {
-		return nil, fmt.Errorf("err: status: %v", response.StatusCode)
-	}
 
+	plan := new(Plan)
+	if err := s.client.Do(ctx, request, plan); err != nil {
+		return nil, err
+	}
 	return plan, nil
 }
 
-func (s *Plans) List() ([]*Plan, error) {
-	plan := make([]*Plan, 0)
-	response, err := s.sling.Get("/v1/plans/").ReceiveSuccess(&plan)
-
+func (s *Plans) List(ctx context.Context) ([]*Plan, error) {
+	request, err := s.client.NewRequest(http.MethodGet, plansUrl, nil)
 	if err != nil {
 		return nil, err
 	}
-	if response.StatusCode != 200 {
-		return nil, fmt.Errorf("err: status: %v", response.StatusCode)
+	plans := make([]*Plan, 0)
+	if err := s.client.Do(ctx, request, plans); err != nil {
+		return nil, err
 	}
-
-	return plan, nil
+	return plans, nil
 }
