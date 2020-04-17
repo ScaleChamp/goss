@@ -72,7 +72,8 @@ func (s *Instances) Create(ctx context.Context, instanceCreateRequest *InstanceC
 }
 
 func (s *Instances) Update(ctx context.Context, instanceUpdateRequest *InstanceUpdateRequest) (*Instance, error) {
-	request, err := s.client.NewRequest(http.MethodPatch, instances, instanceUpdateRequest)
+	path := fmt.Sprintf("%s/%s", instances, instanceUpdateRequest.ID)
+	request, err := s.client.NewRequest(http.MethodPatch, path, instanceUpdateRequest)
 	if err != nil {
 		return nil, err
 	}
