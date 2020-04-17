@@ -31,23 +31,23 @@ type ConnectionInfo struct {
 }
 
 type InstanceCreateRequest struct {
-	Name      string   `json:"name"`
-	PlanID    string   `json:"plan_id,omitempty"`
-	LicenseKey string `json:"license_key,omitempty"`
-	EvictionPolicy string `json:"eviction_policy,omitempty"`
-	Password  string   `json:"password,omitempty"`
-	Whitelist []string `json:"whitelist,omitempty"`
+	Name           string   `json:"name"`
+	PlanID         string   `json:"plan_id,omitempty"`
+	LicenseKey     string   `json:"license_key,omitempty"`
+	EvictionPolicy string   `json:"eviction_policy,omitempty"`
+	Password       string   `json:"password,omitempty"`
+	Whitelist      []string `json:"whitelist,omitempty"`
 }
 
 type InstanceUpdateRequest struct {
-	ID         string    `json:"-"`
-	Name       *string   `json:"name,omitempty"`
-	Password   string    `json:"password,omitempty"`
-	PlanID     string    `json:"plan_id,omitempty"`
-	Whitelist  *[]string `json:"whitelist,omitempty"`
-	LicenseKey string    `json:"license_key,omitempty"`
-	EvictionPolicy string `json:"eviction_policy,omitempty"`
-	Enabled    *bool     `json:"enabled,omitempty"`
+	ID             string    `json:"-"`
+	Name           *string   `json:"name,omitempty"`
+	Password       string    `json:"password,omitempty"`
+	PlanID         string    `json:"plan_id,omitempty"`
+	Whitelist      *[]string `json:"whitelist,omitempty"`
+	LicenseKey     string    `json:"license_key,omitempty"`
+	EvictionPolicy string    `json:"eviction_policy,omitempty"`
+	Enabled        *bool     `json:"enabled,omitempty"`
 }
 
 func (s *Instances) Create(instanceCreqteRequest *InstanceCreateRequest) (*Instance, error) {
