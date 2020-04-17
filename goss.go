@@ -58,6 +58,9 @@ func (c *Client) Do(ctx context.Context, request *http.Request, v interface{}) e
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
 		return fmt.Errorf("err: %s", response.Status)
 	}
+	if response.StatusCode == http.StatusNoContent {
+		return nil
+	}
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return err
