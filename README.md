@@ -1,1 +1,1 @@
-# API implementation for ScalableSpace products in Go
+# API SDK for ScaleChamp products in Golang
